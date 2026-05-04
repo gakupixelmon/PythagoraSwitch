@@ -43,7 +43,7 @@ export default function GameUI() {
         <div className="header-logo">
           <div className="logo-icon" />
           <div>
-            <div className="logo-title">Pitagora Switch 3D</div>
+            <div className="logo-title">Pythagora Switch 3D</div>
             <div className="logo-subtitle">プレイモード</div>
           </div>
         </div>

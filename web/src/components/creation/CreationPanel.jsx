@@ -1,5 +1,6 @@
 import { useCourseStore } from '../../store/courseStore';
 import { useGameStore } from '../../store/gameStore';
+import AuthUI from './AuthUI';
 
 /**
  * 作成モードの左サイドパネル
@@ -23,6 +24,18 @@ export default function CreationPanel() {
         ノードをドラッグで移動。<br />
         高さスライダーで傾斜を調整。
       </div>
+
+      {/* ─── プレイボタン ─── */}
+      <button
+        className={`btn-play-mode ${canPlay ? '' : 'disabled'}`}
+        onClick={() => canPlay && setAppMode('play')}
+        disabled={!canPlay}
+      >
+        ▶ プレイモードへ
+      </button>
+      {!canPlay && (
+        <p className="panel-warn">ノードを2つ以上追加してください</p>
+      )}
 
       {/* ─── ノードリスト ─── */}
       <div className="node-list-header">
@@ -77,17 +90,8 @@ export default function CreationPanel() {
         })}
       </ul>
 
-      {/* ─── プレイボタン ─── */}
-      <button
-        className={`btn-play-mode ${canPlay ? '' : 'disabled'}`}
-        onClick={() => canPlay && setAppMode('play')}
-        disabled={!canPlay}
-      >
-        ▶ プレイモードへ
-      </button>
-      {!canPlay && (
-        <p className="panel-warn">ノードを2つ以上追加してください</p>
-      )}
+      {/* ─── 認証・保存 UI ─── */}
+      <AuthUI />
     </aside>
   );
 }

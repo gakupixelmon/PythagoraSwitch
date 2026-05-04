@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      # ホスト側の.envから渡すか、ここで定義
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    # CPU・メモリ制限を追加してDDoS等の影響を軽減
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
