@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, TransformControls } from '@react-three/drei';
+import { Physics } from '@react-three/rapier';
 import * as THREE from 'three';
 import { useCourseStore } from '../../store/courseStore';
 import { useGameStore } from '../../store/gameStore';
@@ -119,9 +120,11 @@ export default function CreationScene() {
 
       <FloorGrid />
 
-      {objects.map(obj => (
-        <EditableObject key={obj.id} object={obj} />
-      ))}
+      <Physics paused={true}>
+        {objects.map(obj => (
+          <EditableObject key={obj.id} object={obj} />
+        ))}
+      </Physics>
 
       <OrbitControls
         makeDefault

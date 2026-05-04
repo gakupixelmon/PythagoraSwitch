@@ -6,7 +6,7 @@ import { useCourseStore } from '../../store/courseStore';
 export default function AuthUI() {
   const { user, profile, loading: authLoading, signInWithGitHub, signInWithGoogle, signOut } = useAuthStore();
   const { courses, fetchCourses, saveCourse, loadCourseNodes, loading: dbLoading, error: dbError } = useDbStore();
-  const { nodes } = useCourseStore();
+  const { objects } = useCourseStore();
   
   const [courseName, setCourseName] = useState('');
   const [showList, setShowList] = useState(false);
@@ -33,7 +33,7 @@ export default function AuthUI() {
   const handleSave = async () => {
     if (!courseName) return alert('コース名を入力してください');
     try {
-      await saveCourse(courseName, nodes);
+      await saveCourse(courseName, objects);
       setCourseName('');
       alert('保存しました！');
     } catch (e) {
@@ -43,8 +43,8 @@ export default function AuthUI() {
 
   const handleLoad = async (courseId) => {
     try {
-      const loadedNodes = await loadCourseNodes(courseId);
-      useCourseStore.setState({ nodes: loadedNodes, selectedId: null });
+      const loadedObjects = await loadCourseNodes(courseId);
+      useCourseStore.setState({ objects: loadedObjects, selectedId: null });
       alert('コースを読み込みました');
       setShowList(false);
     } catch (e) {
@@ -69,7 +69,7 @@ export default function AuthUI() {
           className="input-course"
           maxLength={50}
         />
-        <button className="btn-save" onClick={handleSave} disabled={dbLoading || nodes.length < 2}>
+        <button className="btn-save" onClick={handleSave} disabled={dbLoading || objects.length < 2}>
           {dbLoading ? '保存中...' : '💾 保存'}
         </button>
       </div>
