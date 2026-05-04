@@ -9,6 +9,7 @@ export const useGameStore = create((set, get) => ({
   elapsedTime: 0,
   bestTime: null,
   cameraMode: 'follow', // 'follow' | 'overview' | 'orbit'
+  dragMode: 'rotate', // 'rotate' | 'pan'
 
   _timerInterval: null,
 
@@ -48,4 +49,5 @@ export const useGameStore = create((set, get) => ({
   },
 
   setCameraMode: (m) => set({ cameraMode: m }),
+  setDragMode: (m) => set({ dragMode: m }),
 }));

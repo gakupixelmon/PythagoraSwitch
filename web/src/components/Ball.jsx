@@ -32,12 +32,16 @@ export default function Ball({ startPosition, ballPosRef }) {
         rbRef.current.setTranslation({ x, y, z }, true);
         rbRef.current.setLinvel({ x:0, y:0, z:0 }, true);
         rbRef.current.setAngvel({ x:0, y:0, z:0 }, true);
-      } catch (_) {}
+      } catch {
+        // ignore
+      }
     } else if (state === 'running') {
       fellFired.current = false;
       try {
         rbRef.current.setBodyType(0, true);           // Dynamic
-      } catch (_) {}
+      } catch {
+        // ignore
+      }
     }
   }, [state, startPosition]);
 

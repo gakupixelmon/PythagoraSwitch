@@ -4,9 +4,9 @@ import { useGameStore } from '../store/gameStore';
 export default function GameUI() {
   const {
     state, elapsedTime, bestTime,
-    cameraMode, appMode,
+    cameraMode, dragMode,
     startGame, resetGame,
-    setCameraMode, setAppMode,
+    setCameraMode, setAppMode, setDragMode,
   } = useGameStore();
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function GameUI() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [state, cameraMode]);
+  }, [state, cameraMode, startGame, resetGame, setCameraMode, setAppMode]);
 
   const camLabel = { follow:'📷 追従', overview:'🌐 俯瞰', orbit:'🖱 フリー' };
   const statusMap = {
@@ -82,6 +82,11 @@ export default function GameUI() {
         }}>
           {camLabel[cameraMode]}
         </button>
+        {cameraMode === 'orbit' && (
+          <button className="btn btn-camera" onClick={() => setDragMode(dragMode === 'rotate' ? 'pan' : 'rotate')}>
+            {dragMode === 'rotate' ? '🔄 視点回転' : '✋ 平行移動'}
+          </button>
+        )}
       </div>
 
       {/* ─── ゴールオーバーレイ ─── */}

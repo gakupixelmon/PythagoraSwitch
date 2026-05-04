@@ -1,8 +1,9 @@
-import { useRef, useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useCallback } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Grid, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { useCourseStore } from '../../store/courseStore';
+import { useGameStore } from '../../store/gameStore';
 
 // 色定義
 const COL_DEFAULT  = new THREE.Color('#f97316');  // オレンジ
@@ -128,6 +129,7 @@ function FloorGrid() {
 /** 作成モードの3Dシーン */
 export default function CreationScene() {
   const { nodes, selectedId } = useCourseStore();
+  const dragMode = useGameStore(s => s.dragMode);
 
   return (
     <>
@@ -175,6 +177,11 @@ export default function CreationScene() {
         dampingFactor={0.08}
         target={[0, 1, 5]}
         maxPolarAngle={Math.PI * 0.85}
+        mouseButtons={{
+          LEFT: dragMode === 'rotate' ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: dragMode === 'rotate' ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE
+        }}
       />
     </>
   );

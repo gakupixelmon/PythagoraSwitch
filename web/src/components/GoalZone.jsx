@@ -6,7 +6,7 @@ export default function GoalZone({ position }) {
   const triggered = useRef(false);
   const { state, onGoal } = useGameStore();
 
-  const onIntersect = ({ other }) => {
+  const onIntersect = () => {
     if (triggered.current || state !== 'running') return;
     triggered.current = true;
     onGoal();

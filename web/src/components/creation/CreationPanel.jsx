@@ -8,6 +8,8 @@ import AuthUI from './AuthUI';
 export default function CreationPanel() {
   const { nodes, selectedId, select, setHeight, deleteNode, reset } = useCourseStore();
   const setAppMode = useGameStore(s => s.setAppMode);
+  const dragMode = useGameStore(s => s.dragMode);
+  const setDragMode = useGameStore(s => s.setDragMode);
   const canPlay = nodes.length >= 2;
 
   return (
@@ -23,6 +25,20 @@ export default function CreationPanel() {
         <b>3Dビューをクリック</b>でノードを追加。<br />
         ノードをドラッグで移動。<br />
         高さスライダーで傾斜を調整。
+      </div>
+
+      {/* ─── 視点操作 ─── */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', marginTop: '16px' }}>
+        <button 
+          style={{ flex: 1, padding: '8px', background: dragMode === 'rotate' ? '#3b82f6' : '#374151', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: dragMode === 'rotate' ? 'bold' : 'normal' }}
+          onClick={() => setDragMode('rotate')}>
+          🔄 視点回転
+        </button>
+        <button 
+          style={{ flex: 1, padding: '8px', background: dragMode === 'pan' ? '#3b82f6' : '#374151', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: dragMode === 'pan' ? 'bold' : 'normal' }}
+          onClick={() => setDragMode('pan')}>
+          ✋ 平行移動
+        </button>
       </div>
 
       {/* ─── プレイボタン ─── */}

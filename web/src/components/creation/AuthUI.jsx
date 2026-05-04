@@ -6,7 +6,7 @@ import { useCourseStore } from '../../store/courseStore';
 export default function AuthUI() {
   const { user, profile, loading: authLoading, signInWithGitHub, signInWithGoogle, signOut } = useAuthStore();
   const { courses, fetchCourses, saveCourse, loadCourseNodes, loading: dbLoading, error: dbError } = useDbStore();
-  const { nodes, reset: resetCourse } = useCourseStore();
+  const { nodes } = useCourseStore();
   
   const [courseName, setCourseName] = useState('');
   const [showList, setShowList] = useState(false);
@@ -14,7 +14,7 @@ export default function AuthUI() {
   // ユーザー変更時にコース一覧を取得
   useEffect(() => {
     if (user) fetchCourses();
-  }, [user]);
+  }, [user, fetchCourses]);
 
   if (authLoading) return <div className="auth-panel">読み込み中...</div>;
 

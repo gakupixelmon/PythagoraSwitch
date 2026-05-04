@@ -13,7 +13,6 @@ import { useCourseStore } from '../store/courseStore';
 
 function PlaySceneInner({ course }) {
   const ballPosRef = useRef(new THREE.Vector3());
-  const { state } = useGameStore();
   // 物理はランニング中のみ有効（readyではボールはkinematicなので実質問題ない）
   // pausedを使わずPhysicsを常時稼働させてkinematicで制御する方式
   return (

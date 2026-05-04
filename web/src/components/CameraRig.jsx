@@ -6,8 +6,7 @@ import { useGameStore } from '../store/gameStore';
 
 export default function CameraRig({ ballPosRef }) {
   const { camera } = useThree();
-  const { cameraMode, state } = useGameStore();
-  const velRef = useRef(new THREE.Vector3());
+  const { cameraMode, state, dragMode } = useGameStore();
   const smoothPos = useRef(new THREE.Vector3(3, 12, -6));
   const smoothTgt = useRef(new THREE.Vector3(0, 1, 4));
 
@@ -19,7 +18,7 @@ export default function CameraRig({ ballPosRef }) {
     camera.lookAt(OVERVIEW_TGT);
     smoothPos.current.copy(OVERVIEW_POS);
     smoothTgt.current.copy(OVERVIEW_TGT);
-  }, []);
+  }, [OVERVIEW_POS, OVERVIEW_TGT, camera]);
 
   useFrame((_, dt) => {
     if (cameraMode === 'orbit') return;
@@ -43,6 +42,15 @@ export default function CameraRig({ ballPosRef }) {
   });
 
   return cameraMode === 'orbit'
-    ? <OrbitControls enableDamping dampingFactor={0.08} target={[0, 1, 6]} />
+    ? <OrbitControls 
+        enableDamping 
+        dampingFactor={0.08} 
+        target={[0, 1, 6]} 
+        mouseButtons={{
+          LEFT: dragMode === 'rotate' ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: dragMode === 'rotate' ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE
+        }}
+      />
     : null;
 }
