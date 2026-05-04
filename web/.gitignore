@@ -22,3 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 環境変数（APIキーなどを含む可能性があるため必須）
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# テストカバレッジ
+coverage/
+
+# macOS
+.DS_Store
+__MACOSX/
+
+# Vite キャッシュ
+.vite/

@@ -1,23 +1,29 @@
 import { create } from 'zustand';
 
-/**
- * ゲーム状態の管理 (Zustand store)
- * states: 'ready' | 'running' | 'goal' | 'fell'
- */
 export const useGameStore = create((set, get) => ({
+  // 'create' | 'play'
+  appMode: 'create',
+
+  // play状態 'ready' | 'running' | 'goal' | 'fell'
   state: 'ready',
   elapsedTime: 0,
   bestTime: null,
-  cameraMode: 'follow',   // 'follow' | 'overview' | 'orbit'
-  activeCourse: 'classic',
+  cameraMode: 'follow', // 'follow' | 'overview' | 'orbit'
 
-  // タイマー
   _timerInterval: null,
 
+  // ─── モード切替 ──────────────────────────────────────
+  setAppMode: (mode) => {
+    get().resetGame();
+    set({ appMode: mode, cameraMode: mode === 'play' ? 'follow' : 'orbit' });
+  },
+
+  // ─── Play操作 ────────────────────────────────────────
   startGame: () => {
-    const interval = setInterval(() => {
-      set(s => ({ elapsedTime: s.elapsedTime + 0.1 }));
-    }, 100);
+    const interval = setInterval(
+      () => set(s => ({ elapsedTime: +(s.elapsedTime + 0.1).toFixed(1) })),
+      100
+    );
     set({ state: 'running', elapsedTime: 0, _timerInterval: interval });
   },
 
@@ -38,15 +44,8 @@ export const useGameStore = create((set, get) => ({
     const { _timerInterval } = get();
     if (_timerInterval) clearInterval(_timerInterval);
     set({ state: 'fell', _timerInterval: null });
-    // 2秒後に自動リセット
-    setTimeout(() => {
-      if (get().state === 'fell') get().resetGame();
-    }, 2000);
+    setTimeout(() => { if (get().state === 'fell') get().resetGame(); }, 1800);
   },
 
-  setCameraMode: (mode) => set({ cameraMode: mode }),
-  setActiveCourse: (id) => {
-    get().resetGame();
-    set({ activeCourse: id });
-  },
+  setCameraMode: (m) => set({ cameraMode: m }),
 }));

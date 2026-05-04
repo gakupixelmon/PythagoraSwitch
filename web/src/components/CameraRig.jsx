@@ -1,69 +1,48 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameStore';
 
-/**
- * カメラコントローラー
- * - 'follow': ボールを追いかける
- * - 'overview': コース全体を俯瞰
- * - 'orbit': マウスで自由操作
- */
-export default function CameraRig({ ballPosRef, courseCenter }) {
+export default function CameraRig({ ballPosRef }) {
   const { camera } = useThree();
   const { cameraMode, state } = useGameStore();
-  const smoothPos = useRef(new THREE.Vector3());
-  const smoothTarget = useRef(new THREE.Vector3());
-  const orbitRef = useRef();
+  const velRef = useRef(new THREE.Vector3());
+  const smoothPos = useRef(new THREE.Vector3(3, 12, -6));
+  const smoothTgt = useRef(new THREE.Vector3(0, 1, 4));
 
-  const OVERVIEW_POS = new THREE.Vector3(
-    courseCenter[0],
-    courseCenter[1] + 14,
-    courseCenter[2] - 8
-  );
-  const OVERVIEW_TARGET = new THREE.Vector3(courseCenter[0], courseCenter[1], courseCenter[2] + 2);
+  const OVERVIEW_POS = useMemo(() => new THREE.Vector3(3, 14, -6), []);
+  const OVERVIEW_TGT = useMemo(() => new THREE.Vector3(0, 1, 6), []);
 
   useEffect(() => {
-    // 初期カメラ位置（俯瞰）
     camera.position.copy(OVERVIEW_POS);
-    camera.lookAt(OVERVIEW_TARGET);
+    camera.lookAt(OVERVIEW_TGT);
     smoothPos.current.copy(OVERVIEW_POS);
-    smoothTarget.current.copy(OVERVIEW_TARGET);
-  }, [courseCenter]);
+    smoothTgt.current.copy(OVERVIEW_TGT);
+  }, []);
 
-  useFrame((_, delta) => {
+  useFrame((_, dt) => {
     if (cameraMode === 'orbit') return;
 
-    let targetPos, targetLookAt;
-    const ballPos = ballPosRef.current
-      ? ballPosRef.current
-      : new THREE.Vector3(...courseCenter);
+    const ballPos = ballPosRef?.current ?? OVERVIEW_TGT;
+    let wantPos, wantTgt;
 
     if (cameraMode === 'follow' && state === 'running') {
-      // ボール追従: 後ろ上方から見る
-      targetPos = ballPos.clone().add(new THREE.Vector3(2, 3.5, -5));
-      targetLookAt = ballPos.clone().add(new THREE.Vector3(0, 0, 2));
+      wantPos = ballPos.clone().add(new THREE.Vector3(2.5, 3.5, -5.5));
+      wantTgt = ballPos.clone().add(new THREE.Vector3(0, 0, 2));
     } else {
-      // 俯瞰
-      targetPos = OVERVIEW_POS.clone();
-      targetLookAt = OVERVIEW_TARGET.clone();
+      wantPos = OVERVIEW_POS.clone();
+      wantTgt = OVERVIEW_TGT.clone();
     }
 
-    const lerpFactor = Math.min(1, delta * 4);
-    smoothPos.current.lerp(targetPos, lerpFactor);
-    smoothTarget.current.lerp(targetLookAt, lerpFactor);
-
+    const k = Math.min(1, dt * 4);
+    smoothPos.current.lerp(wantPos, k);
+    smoothTgt.current.lerp(wantTgt, k);
     camera.position.copy(smoothPos.current);
-    camera.lookAt(smoothTarget.current);
+    camera.lookAt(smoothTgt.current);
   });
 
-  return cameraMode === 'orbit' ? (
-    <OrbitControls
-      ref={orbitRef}
-      enableDamping
-      dampingFactor={0.08}
-      target={[courseCenter[0], courseCenter[1], courseCenter[2]]}
-    />
-  ) : null;
+  return cameraMode === 'orbit'
+    ? <OrbitControls enableDamping dampingFactor={0.08} target={[0, 1, 6]} />
+    : null;
 }

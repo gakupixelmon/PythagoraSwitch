@@ -104,3 +104,30 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# ─── Web フロントエンド (web/) ───────────────────────
+web/node_modules/
+web/dist/
+web/dist-ssr/
+web/.env
+web/.env.local
+web/.env.*.local
+web/*.local
+
+# Web build logs
+web/logs/
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/pnpm-debug.log*
+
+# ─── macOS ──────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+__MACOSX/
+
+# ─── IDE ────────────────────────────────────────────
+.idea/
+*.swp
+*.swo
