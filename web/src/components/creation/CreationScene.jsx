@@ -11,18 +11,26 @@ import CurvedRailObj from '../objects/CurvedRailObj';
 import SphereObj from '../objects/SphereObj';
 import MainBallObj from '../objects/MainBallObj';
 import GoalZoneObj from '../objects/GoalZoneObj';
+import SeesawObj from '../objects/SeesawObj';
+import CupObj from '../objects/CupObj';
+import FunnelObj from '../objects/FunnelObj';
+import HolePlateObj from '../objects/HolePlateObj';
 
 function EditableObject({ object }) {
   const { selectedId, select, updateObject } = useCourseStore();
-  const dragMode = useGameStore(s => s.dragMode); // 'rotate' | 'pan' -> we map this to TransformControls mode
+  const dragMode = useGameStore(s => s.dragMode);
   const isSelected = selectedId === object.id;
   
   let Content = null;
   if (object.type === 'straight_rail') Content = StraightRailObj;
-  if (object.type === 'curved_rail') Content = CurvedRailObj;
-  if (object.type === 'sphere') Content = SphereObj;
-  if (object.type === 'main_ball') Content = MainBallObj;
-  if (object.type === 'goal_zone') Content = GoalZoneObj;
+  if (object.type === 'curved_rail')   Content = CurvedRailObj;
+  if (object.type === 'sphere')        Content = SphereObj;
+  if (object.type === 'main_ball')     Content = MainBallObj;
+  if (object.type === 'goal_zone')     Content = GoalZoneObj;
+  if (object.type === 'seesaw')        Content = SeesawObj;
+  if (object.type === 'cup')           Content = CupObj;
+  if (object.type === 'funnel')        Content = FunnelObj;
+  if (object.type === 'hole_plate')    Content = HolePlateObj;
 
   if (!Content) return null;
 
