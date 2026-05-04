@@ -4,17 +4,18 @@ import { Physics } from '@react-three/rapier';
 import { Sky, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 
-import Ball from './Ball';
-import RailCourse from './RailCourse';
-import GoalZone from './GoalZone';
 import CameraRig from './CameraRig';
-import { useGameStore } from '../store/gameStore';
 import { useCourseStore } from '../store/courseStore';
+
+import StraightRailObj from './objects/StraightRailObj';
+import CurvedRailObj from './objects/CurvedRailObj';
+import SphereObj from './objects/SphereObj';
+import MainBallObj from './objects/MainBallObj';
+import GoalZoneObj from './objects/GoalZoneObj';
 
 function PlaySceneInner({ course }) {
   const ballPosRef = useRef(new THREE.Vector3());
-  // 物理はランニング中のみ有効（readyではボールはkinematicなので実質問題ない）
-  // pausedを使わずPhysicsを常時稼働させてkinematicで制御する方式
+
   return (
     <>
       <ambientLight intensity={0.45} color="#445577" />
@@ -29,11 +30,16 @@ function PlaySceneInner({ course }) {
 
       <CameraRig ballPosRef={ballPosRef} />
 
-      {/* ─── 物理ワールド（常時稼働 / ボールはKinematicで制御） ─── */}
+      {/* ─── 物理ワールド ─── */}
       <Physics gravity={[0, -9.81, 0]} timeStep="vary">
-        <Ball startPosition={course.ballStart} ballPosRef={ballPosRef} />
-        <RailCourse course={course} />
-        <GoalZone position={course.goalPos} />
+        {course.objects.map(obj => {
+          if (obj.type === 'straight_rail') return <StraightRailObj key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'curved_rail') return <CurvedRailObj key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'sphere') return <SphereObj key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'main_ball') return <MainBallObj key={obj.id} object={obj} ballPosRef={ballPosRef} isEditMode={false} />;
+          if (obj.type === 'goal_zone') return <GoalZoneObj key={obj.id} object={obj} isEditMode={false} />;
+          return null;
+        })}
       </Physics>
 
       {/* 地面 */}
@@ -43,13 +49,15 @@ function PlaySceneInner({ course }) {
       </mesh>
 
       {/* スタートマーカー */}
-      <group position={course.ballStart}>
-        <mesh position={[0,-0.2,0]}>
-          <cylinderGeometry args={[0.24,0.24,0.04,32]} />
-          <meshStandardMaterial color="#a78bfa" emissive="#a78bfa" emissiveIntensity={1.2} />
-        </mesh>
-        <pointLight color="#a78bfa" intensity={4} distance={2} decay={2} />
-      </group>
+      {course.ballStart && (
+        <group position={course.ballStart}>
+          <mesh position={[0,-0.2,0]}>
+            <cylinderGeometry args={[0.24,0.24,0.04,32]} />
+            <meshStandardMaterial color="#a78bfa" emissive="#a78bfa" emissiveIntensity={1.2} />
+          </mesh>
+          <pointLight color="#a78bfa" intensity={4} distance={2} decay={2} />
+        </group>
+      )}
     </>
   );
 }
@@ -59,6 +67,9 @@ export default function PlayScene() {
   const course = getCourse();
   if (!course) return null;
 
+  // Reactのkeyに渡してオブジェクトの構成が変わるたびに再マウント
+  const courseKey = JSON.stringify(course.objects.map(o => `${o.id}-${o.position.join(',')}-${o.rotation.join(',')}`));
+
   return (
     <Canvas
       shadows
@@ -67,7 +78,7 @@ export default function PlayScene() {
       style={{ width: '100%', height: '100%' }}
     >
       <Suspense fallback={null}>
-        <PlaySceneInner key={JSON.stringify(course.segments)} course={course} />
+        <PlaySceneInner key={courseKey} course={course} />
       </Suspense>
     </Canvas>
   );

@@ -10,29 +10,36 @@ const MIN_NODES = 2;
 const MAX_COORD = 200;   // 座標の絶対値上限
 const MAX_NAME_LEN = 100;
 
-function validateNodes(nodes) {
-  if (!Array.isArray(nodes))
-    throw new Error('ノードデータが不正です');
-  if (nodes.length < MIN_NODES || nodes.length > MAX_NODES)
-    throw new Error(`ノードは ${MIN_NODES}〜${MAX_NODES} 個必要です`);
+function validateObjects(objects) {
+  if (!Array.isArray(objects))
+    throw new Error('オブジェクトデータが不正です');
+  if (objects.length > MAX_NODES)
+    throw new Error(`オブジェクトは最大 ${MAX_NODES} 個までです`);
 
-  for (const n of nodes) {
-    if (typeof n.x !== 'number' || typeof n.y !== 'number' || typeof n.z !== 'number')
-      throw new Error('ノードの座標が不正です');
-    if (!isFinite(n.x) || !isFinite(n.y) || !isFinite(n.z))
-      throw new Error('ノードの座標に無限大が含まれています');
-    if (Math.abs(n.x) > MAX_COORD || Math.abs(n.y) > MAX_COORD || Math.abs(n.z) > MAX_COORD)
-      throw new Error(`座標値は ±${MAX_COORD} 以内にしてください`);
+  const hasMainBall = objects.some(o => o.type === 'main_ball');
+  const hasGoalZone = objects.some(o => o.type === 'goal_zone');
+  if (!hasMainBall || !hasGoalZone) {
+    throw new Error('メインボールとゴールゾーンは必須です');
+  }
+
+  for (const o of objects) {
+    if (!Array.isArray(o.position) || o.position.length !== 3)
+      throw new Error('位置データが不正です');
+    if (!Array.isArray(o.rotation) || o.rotation.length !== 3)
+      throw new Error('回転データが不正です');
   }
 }
 
-// nodes を保存前にサニタイズ（不要フィールドを削除、精度を丸める）
-function sanitizeNodes(nodes) {
-  return nodes.map(n => ({
-    id: typeof n.id === 'number' ? n.id : 0,
-    x:  +n.x.toFixed(3),
-    y:  +n.y.toFixed(3),
-    z:  +n.z.toFixed(3),
+// サニタイズ
+function sanitizeObjects(objects) {
+  return objects.map(o => ({
+    id: typeof o.id === 'number' ? o.id : 0,
+    type: String(o.type),
+    position: o.position.map(v => +v.toFixed(3)),
+    rotation: o.rotation.map(v => +v.toFixed(3)),
+    isStatic: Boolean(o.isStatic),
+    mass: Number(o.mass) || 1,
+    properties: o.properties || {}
   }));
 }
 
@@ -76,15 +83,15 @@ export const useDbStore = create((set, get) => ({
       throw new Error('コース名を入力してください');
     if (name.trim().length > MAX_NAME_LEN)
       throw new Error(`コース名は ${MAX_NAME_LEN} 文字以内にしてください`);
-    validateNodes(nodes);
+    validateObjects(nodes);
 
     set({ loading: true, error: null });
     const { data, error } = await supabase
       .from('courses')
       .insert({
-        user_id: user.id,            // RLS で強制されるが明示的に渡す
+        user_id: user.id,
         name:    name.trim(),
-        nodes:   sanitizeNodes(nodes),
+        nodes:   sanitizeObjects(nodes),
       })
       .select('id, name, best_time, play_count, is_public, updated_at')
       .single();
@@ -102,13 +109,13 @@ export const useDbStore = create((set, get) => ({
 
     if (!name || name.trim().length === 0)
       throw new Error('コース名を入力してください');
-    validateNodes(nodes);
+    validateObjects(nodes);
 
     set({ loading: true, error: null });
     const { data, error } = await supabase
       .from('courses')
-      .update({ name: name.trim(), nodes: sanitizeNodes(nodes) })
-      .eq('id', id)            // RLS が user_id を自動チェック
+      .update({ name: name.trim(), nodes: sanitizeObjects(nodes) })
+      .eq('id', id)
       .select('id, name, best_time, play_count, is_public, updated_at')
       .single();
 
@@ -140,7 +147,7 @@ export const useDbStore = create((set, get) => ({
       .single();
 
     if (error) throw new Error(error.message);
-    validateNodes(data.nodes);  // ロード時も検証
+    validateObjects(data.nodes);  // ロード時も検証
     return data.nodes;
   },
 
