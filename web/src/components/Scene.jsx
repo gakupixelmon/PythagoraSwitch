@@ -12,6 +12,10 @@ import CurvedRailObj from './objects/CurvedRailObj';
 import SphereObj from './objects/SphereObj';
 import MainBallObj from './objects/MainBallObj';
 import GoalZoneObj from './objects/GoalZoneObj';
+import SeesawObj from './objects/SeesawObj';
+import CupObj from './objects/CupObj';
+import FunnelObj from './objects/FunnelObj';
+import HolePlateObj from './objects/HolePlateObj';
 
 function PlaySceneInner({ course }) {
   const ballPosRef = useRef(new THREE.Vector3());
@@ -34,10 +38,14 @@ function PlaySceneInner({ course }) {
       <Physics gravity={[0, -9.81, 0]} timeStep="vary">
         {course.objects.map(obj => {
           if (obj.type === 'straight_rail') return <StraightRailObj key={obj.id} object={obj} isEditMode={false} />;
-          if (obj.type === 'curved_rail') return <CurvedRailObj key={obj.id} object={obj} isEditMode={false} />;
-          if (obj.type === 'sphere') return <SphereObj key={obj.id} object={obj} isEditMode={false} />;
-          if (obj.type === 'main_ball') return <MainBallObj key={obj.id} object={obj} ballPosRef={ballPosRef} isEditMode={false} />;
-          if (obj.type === 'goal_zone') return <GoalZoneObj key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'curved_rail')  return <CurvedRailObj  key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'sphere')       return <SphereObj       key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'main_ball')    return <MainBallObj     key={obj.id} object={obj} ballPosRef={ballPosRef} isEditMode={false} />;
+          if (obj.type === 'goal_zone')    return <GoalZoneObj     key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'seesaw')       return <SeesawObj       key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'cup')          return <CupObj          key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'funnel')       return <FunnelObj       key={obj.id} object={obj} isEditMode={false} />;
+          if (obj.type === 'hole_plate')   return <HolePlateObj    key={obj.id} object={obj} isEditMode={false} />;
           return null;
         })}
       </Physics>

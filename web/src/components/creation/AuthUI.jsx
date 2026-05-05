@@ -6,8 +6,7 @@ import { useCourseStore } from '../../store/courseStore';
 export default function AuthUI() {
   const { user, profile, loading: authLoading, signInWithGitHub, signInWithGoogle, signOut } = useAuthStore();
   const { courses, fetchCourses, saveCourse, loadCourseNodes, loading: dbLoading, error: dbError } = useDbStore();
-  const { objects } = useCourseStore();
-  
+  const { objects, setObjects } = useCourseStore();
   const [courseName, setCourseName] = useState('');
   const [showList, setShowList] = useState(false);
 
@@ -44,7 +43,7 @@ export default function AuthUI() {
   const handleLoad = async (courseId) => {
     try {
       const loadedObjects = await loadCourseNodes(courseId);
-      useCourseStore.setState({ objects: loadedObjects, selectedId: null });
+      setObjects(loadedObjects);
       alert('コースを読み込みました');
       setShowList(false);
     } catch (e) {
