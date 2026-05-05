@@ -117,9 +117,9 @@ export const TEMPLATES = {
 
 // カテゴリ定義
 export const TEMPLATE_CATEGORIES = {
-  rails:    { label: 'レール', icon: '🛤️' },
+  rails: { label: 'レール', icon: '🛤️' },
   gimmicks: { label: 'ギミック', icon: '⚙️' },
-  balls:    { label: 'ボール', icon: '⚽' }
+  balls: { label: 'ボール', icon: '⚽' }
 };
 
 export const useCourseStore = create((set, get) => ({
@@ -146,15 +146,15 @@ export const useCourseStore = create((set, get) => ({
   }),
 
   // ─── 選択 ───────────────────────────────────────────
-  select:   (id) => set({ selectedId: id }),
-  deselect: ()   => set({ selectedId: null }),
+  select: (id) => set({ selectedId: id }),
+  deselect: () => set({ selectedId: null }),
 
   // ─── オブジェクト操作 ────────────────────────────────
   addObject: (templateKey, position) => set(state => {
     const template = TEMPLATES[templateKey];
     if (!template) return state;
     if (templateKey === 'main_ball' && state.objects.some(o => o.type === 'main_ball')) return state;
-    
+
     const newObj = {
       id: uid(),
       type: template.type,

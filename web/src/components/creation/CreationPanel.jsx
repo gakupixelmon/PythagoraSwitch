@@ -200,10 +200,14 @@ function TypeSpecificProps({ obj, onPropChange }) {
  * 作成モードの左サイドパネル
  */
 export default function CreationPanel() {
-  const { objects, selectedId, select, updateObject, deleteObject, reset, addObject, undo, redo, historyIndex, history } = useCourseStore();
-  const setAppMode = useGameStore(s => s.setAppMode);
-  const dragMode = useGameStore(s => s.dragMode);
-  const setDragMode = useGameStore(s => s.setDragMode);
+  const { objects, selectedId, select, updateObject, deleteObject, reset, addObject, undo, redo, historyIndex, history, removeHole } = useCourseStore();
+  const setAppMode      = useGameStore(s => s.setAppMode);
+  const transformMode   = useGameStore(s => s.transformMode);
+  const setTransformMode= useGameStore(s => s.setTransformMode);
+  const holeMode        = useGameStore(s => s.holeMode);
+  const setHoleMode     = useGameStore(s => s.setHoleMode);
+  const holeConfig      = useGameStore(s => s.holeConfig);
+  const setHoleConfig   = useGameStore(s => s.setHoleConfig);
   
   const hasMainBall = objects.some(o => o.type === 'main_ball');
   const hasGoalZone = objects.some(o => o.type === 'goal_zone');
@@ -224,11 +228,67 @@ export default function CreationPanel() {
     <aside className="creation-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '100vh', overflowY: 'auto' }}>
       {/* ─── タイトル ─── */}
       <div className="panel-title" style={{ flexShrink: 0 }}>
-        <span className="panel-icon">🛤️</span>
-        コースエディター
+        <span className="panel-icon">{holeMode ? '🔩' : '🛤️'}</span>
+        {holeMode ? '穴開け専用モード' : 'コースエディター'}
       </div>
 
-      {/* ─── Undo / Redo / 視点モード ─── */}
+      {/* ─── 穴開け専用モード時のUI ─── */}
+      {holeMode && selectedObj && (
+        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '10px', background: '#374151', borderRadius: '6px', marginBottom: '10px', marginTop: '10px' }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: '#fff' }}>
+              対象: {TYPE_ICONS[selectedObj.type]} {TYPE_NAMES[selectedObj.type]}
+            </h4>
+            <p style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '10px', lineHeight: '1.4' }}>
+              物体表面の好きな場所をクリックすると穴が開きます。
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: '#1f2937', padding: '10px', borderRadius: '4px' }}>
+              <label style={labelStyle}>
+                穴の形
+                <select style={selectStyle} value={holeConfig.shape} onChange={e => setHoleConfig({ shape: e.target.value })}>
+                  <option value="circle">丸穴</option>
+                  <option value="square">四角穴</option>
+                </select>
+              </label>
+              <label style={labelStyle}>
+                大きさ
+                <input style={inputStyle} type="number" step="0.05" value={holeConfig.radius} onChange={e => setHoleConfig({ radius: +e.target.value || 0.1 })} />
+              </label>
+            </div>
+            
+            {selectedObj.properties.holes && selectedObj.properties.holes.length > 0 && (
+              <div style={{ marginTop: '12px' }}>
+                <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: '6px' }}>開けられた穴:</div>
+                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  {selectedObj.properties.holes.map((h, i) => (
+                    <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1f2937', padding: '6px 8px', borderRadius: '4px', marginBottom: '4px', fontSize: '0.8rem' }}>
+                      <span>{h.shape === 'circle' ? '丸' : '四角'} ({h.localX.toFixed(1)}, {h.localY.toFixed(1)}, {h.localZ.toFixed(1)})</span>
+                      <button onClick={() => removeHole(selectedId, h.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0 4px', fontSize: '1rem' }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <button 
+            onClick={() => setHoleMode(false)}
+            style={{ 
+              marginTop: 'auto', padding: '12px', background: '#3b82f6', 
+              color: '#fff', border: 'none', borderRadius: '6px', 
+              fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+            }}
+          >
+            ◀ コース編集に戻る
+          </button>
+        </div>
+      )}
+
+      {/* ─── 通常モードのUI ─── */}
+      {!holeMode && (
+        <>
+          {/* ─── Undo / Redo ─── */}
       <div style={{ display: 'flex', gap: '6px', marginTop: '10px', marginBottom: '6px', flexShrink: 0 }}>
         <button onClick={undo} disabled={!canUndo}
           style={{ flex: 1, padding: '6px', background: '#374151', color: canUndo ? '#fff' : '#6b7280', border: 'none', borderRadius: '4px', cursor: canUndo ? 'pointer' : 'not-allowed', fontSize: '0.82rem' }}>
@@ -239,14 +299,15 @@ export default function CreationPanel() {
           ↷ やり直し
         </button>
       </div>
+      {/* ─── ギズモモード切替 ─── */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexShrink: 0 }}>
-        <button onClick={() => setDragMode('rotate')}
-          style={{ flex: 1, padding: '6px', background: dragMode === 'rotate' ? '#3b82f6' : '#374151', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.82rem' }}>
-          🔄 視点回転
+        <button onClick={() => setTransformMode('translate')}
+          style={{ flex: 1, padding: '6px', background: transformMode === 'translate' ? '#6366f1' : '#374151', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.82rem' }}>
+          ✥ 物体を移動
         </button>
-        <button onClick={() => setDragMode('pan')}
-          style={{ flex: 1, padding: '6px', background: dragMode === 'pan' ? '#3b82f6' : '#374151', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.82rem' }}>
-          ✋ 平行移動
+        <button onClick={() => setTransformMode('rotate')}
+          style={{ flex: 1, padding: '6px', background: transformMode === 'rotate' ? '#6366f1' : '#374151', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.82rem' }}>
+          ↻ 物体を回転
         </button>
       </div>
 
@@ -357,6 +418,23 @@ export default function CreationPanel() {
                 🗑️ この物体を削除
               </button>
             )}
+
+            {/* ─── 穴開け機能 ─── */}
+            <hr style={{ borderColor: '#4b5563', margin: '8px 0' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.85rem', color: '#e5e7eb', fontWeight: 'bold' }}>🔩 穴開けモード</span>
+              <button 
+                onClick={() => setHoleMode(true)}
+                style={{ 
+                  background: '#374151', 
+                  color: '#fff', border: 'none', borderRadius: '4px', 
+                  padding: '6px 10px', fontSize: '0.82rem', cursor: 'pointer',
+                  borderBottom: '2px solid #4b5563'
+                }}
+              >
+                専用画面へ ↗
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -365,6 +443,8 @@ export default function CreationPanel() {
       <div style={{ flexShrink: 0, marginTop: '14px' }}>
         <AuthUI />
       </div>
+      </>
+      )}
     </aside>
   );
 }

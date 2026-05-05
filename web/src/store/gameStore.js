@@ -9,7 +9,12 @@ export const useGameStore = create((set, get) => ({
   elapsedTime: 0,
   bestTime: null,
   cameraMode: 'follow', // 'follow' | 'overview' | 'orbit'
-  dragMode: 'rotate', // 'rotate' | 'pan'
+  dragMode: 'rotate',   // 'rotate' | 'pan'  (カメラ操作)
+  transformMode: 'translate', // 'translate' | 'rotate'  (ギズモモード)
+  hoveredId: null,      // ホバー中のオブジェクトID
+  hoveredScreenPos: null, // { x, y } 画面座標
+  holeMode: false,
+  holeConfig: { shape: 'circle', radius: 0.25 },
 
   _timerInterval: null,
 
@@ -50,4 +55,9 @@ export const useGameStore = create((set, get) => ({
 
   setCameraMode: (m) => set({ cameraMode: m }),
   setDragMode: (m) => set({ dragMode: m }),
+  setTransformMode: (m) => set({ transformMode: m }),
+  setHoveredInfo: (id, pos) => set({ hoveredId: id, hoveredScreenPos: pos }),
+  clearHovered: () => set({ hoveredId: null, hoveredScreenPos: null }),
+  setHoleMode: (v) => set({ holeMode: v }),
+  setHoleConfig: (cfg) => set(s => ({ holeConfig: { ...s.holeConfig, ...cfg } })),
 }));
