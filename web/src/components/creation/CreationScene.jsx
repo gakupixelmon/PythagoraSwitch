@@ -19,18 +19,6 @@ import HolePlateObj from '../objects/HolePlateObj';
 
 const _vec3 = new THREE.Vector3();
 
-const btnStyle = {
-  padding: '6px 12px',
-  background: '#3b82f6',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: '0.9rem',
-  fontWeight: 'bold',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-};
-
 /** ホバー中オブジェクトの画面座標をZustandに送信するヘルパー */
 function HoverTracker({ objectId, groupRef }) {
   const { camera, size } = useThree();
@@ -54,7 +42,6 @@ function EditableObject({ object }) {
   const setHoveredInfo = useGameStore(s => s.setHoveredInfo);
   const clearHovered = useGameStore(s => s.clearHovered);
   const hoveredId = useGameStore(s => s.hoveredId);
-  const dragMode = useGameStore(s => s.dragMode);
   const holeMode = useGameStore(s => s.holeMode);
   const holeConfig = useGameStore(s => s.holeConfig);
 
@@ -276,6 +263,7 @@ function IsolatedHoleScene({ object }) {
   const holeConfig = useGameStore(s => s.holeConfig);
   const dragMode = useGameStore(s => s.dragMode);
   const groupRef = useRef();
+  const downPos = useRef({ x: 0, y: 0 });
 
   const setView = (x, y, z) => {
     camera.position.set(x, y, z);
@@ -294,8 +282,6 @@ function IsolatedHoleScene({ object }) {
   if (object.type === 'hole_plate')    Content = HolePlateObj;
 
   if (!Content) return null;
-
-  const downPos = useRef({ x: 0, y: 0 });
 
   const handlePointerDown = (e) => {
     downPos.current = { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };

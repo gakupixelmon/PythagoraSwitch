@@ -6,8 +6,6 @@ import { useAuthStore } from './authStore';
 // DB の CHECK 制約と二重でガード。悪意のあるデータを送信させない。
 
 const MAX_NODES = 50;
-const MIN_NODES = 2;
-const MAX_COORD = 200;   // 座標の絶対値上限
 const MAX_NAME_LEN = 100;
 
 function validateObjects(objects) {
@@ -51,7 +49,7 @@ function sanitizeObjects(objects) {
  *   - DB 側も RLS + CHECK 制約で二重ガード
  *   - user_id はサーバー側の auth.uid() で強制（クライアント送信値は無視）
  */
-export const useDbStore = create((set, get) => ({
+export const useDbStore = create((set) => ({
   courses: [],
   loading: false,
   error:   null,

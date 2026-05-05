@@ -11,7 +11,7 @@ import * as RAPIER from '@dimforge/rapier3d-compat';
  *   height : 支点の高さ (default 1.5)
  */
 export default function SeesawObj({ object, isEditMode }) {
-  const { position, rotation, isStatic, mass, properties } = object;
+  const { position, rotation, mass, properties } = object;
   const { length = 6, width = 0.65, pivotHeight = 1.2 } = properties;
 
   const pivotRef  = useRef();
@@ -42,6 +42,7 @@ export default function SeesawObj({ object, isEditMode }) {
 
     return () => {
       if (jointRef.current) {
+        // eslint-disable-next-line no-empty
         try { world.removeImpulseJoint(jointRef.current, true); } catch {}
         jointRef.current = null;
       }

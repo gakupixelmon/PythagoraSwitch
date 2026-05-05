@@ -260,7 +260,7 @@ export default function CreationPanel() {
               <div style={{ marginTop: '12px' }}>
                 <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: '6px' }}>開けられた穴:</div>
                 <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                  {selectedObj.properties.holes.map((h, i) => (
+                  {selectedObj.properties.holes.map((h) => (
                     <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1f2937', padding: '6px 8px', borderRadius: '4px', marginBottom: '4px', fontSize: '0.8rem' }}>
                       <span>{h.shape === 'circle' ? '丸' : '四角'} ({h.localX.toFixed(1)}, {h.localY.toFixed(1)}, {h.localZ.toFixed(1)})</span>
                       <button onClick={() => removeHole(selectedId, h.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0 4px', fontSize: '1rem' }}>✕</button>
