@@ -1,7 +1,5 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { RigidBody, useRapier } from '@react-three/rapier';
-import { useEffect } from 'react';
-import * as RAPIER from '@dimforge/rapier3d-compat';
 
 /**
  * シーソーオブジェクト
@@ -16,7 +14,7 @@ export default function SeesawObj({ object, isEditMode }) {
 
   const pivotRef  = useRef();
   const boardRef  = useRef();
-  const { world } = useRapier();
+  const { world, rapier } = useRapier();
   const jointRef  = useRef();
 
   const thick = 0.06;
@@ -28,12 +26,14 @@ export default function SeesawObj({ object, isEditMode }) {
     if (isEditMode) return;
     if (!pivotRef.current || !boardRef.current) return;
 
-    const pivot = pivotRef.current.raw();
-    const board = boardRef.current.raw();
+    // @react-three/rapier v1.x/v2.x exposes the body via .current directly, or .current.raw() depending on version.
+    // If .raw() exists, we use it, otherwise we assume .current is the body.
+    const pivot = typeof pivotRef.current.raw === 'function' ? pivotRef.current.raw() : pivotRef.current;
+    const board = typeof boardRef.current.raw === 'function' ? boardRef.current.raw() : boardRef.current;
     if (!pivot || !board) return;
 
     // 支点（fixed）と板（dynamic）をXローテーション軸ヒンジで繋ぐ
-    const params = RAPIER.JointData.revolute(
+    const params = rapier.JointData.revolute(
       { x: 0, y: baseH, z: 0 },   // pivot上端
       { x: 0, y: 0,  z: 0 },       // board中心
       { x: 1, y: 0, z: 0 }         // X軸周りに回転
@@ -47,7 +47,7 @@ export default function SeesawObj({ object, isEditMode }) {
         jointRef.current = null;
       }
     };
-  }, [isEditMode, world, baseH]);
+  }, [isEditMode, world, rapier, baseH]);
 
   const boardY = isEditMode ? pivotHeight : pivotHeight;
 
