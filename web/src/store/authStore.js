@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 /**
  * 認証状態管理ストア
  *
- * - パスワード認証は使わない（OAuth のみ）
+ * - パスワード認証と GitHub 認証を使用
  * - セッション・ユーザー情報は Supabase が管理
  * - onAuthStateChange で状態を常に同期
  */
@@ -54,17 +54,29 @@ export const useAuthStore = create((set, get) => ({
     if (error) set({ authError: error.message });
   },
 
-  // ─── Google でログイン ────────────────────────────────────────────
-  signInWithGoogle: async () => {
-    set({ authError: null });
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-        scopes: 'openid email profile',
-      },
+  // ─── メールアドレスでログイン ─────────────────────────────────────
+  signInWithEmail: async (email, password) => {
+    set({ authError: null, loading: true });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
-    if (error) set({ authError: error.message });
+    if (error) set({ authError: error.message, loading: false });
+    else set({ loading: false });
+  },
+
+  // ─── 新規登録 ───────────────────────────────────────────────────
+  signUpWithEmail: async (email, password) => {
+    set({ authError: null, loading: true });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) set({ authError: error.message, loading: false });
+    else {
+      set({ loading: false });
+      // 確認メール不要設定なので、そのままログインを促すか、自動ログインを待つ
+    }
   },
 
   // ─── ログアウト ───────────────────────────────────────────────────

@@ -62,13 +62,20 @@ export const useDbStore = create((set) => ({
     if (!user) return;
 
     set({ loading: true, error: null });
-    const { data, error } = await supabase
-      .from('courses')
-      .select('id, name, description, best_time, play_count, is_public, updated_at')
-      .order('updated_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('id, name, description, best_time, play_count, is_public, updated_at')
+        .eq('user_id', user.id) // 自分のコースのみに絞り込む
+        .order('updated_at', { ascending: false });
 
-    if (error) set({ error: error.message, loading: false });
-    else       set({ courses: data ?? [], loading: false });
+      if (error) set({ error: error.message });
+      else       set({ courses: data ?? [] });
+    } catch (e) {
+      set({ error: e.message });
+    } finally {
+      set({ loading: false });
+    }
   },
 
   // ─── コースを新規保存 ──────────────────────────────────────────────
@@ -76,28 +83,31 @@ export const useDbStore = create((set) => ({
     const user = useAuthStore.getState().user;
     if (!user) throw new Error('ログインが必要です');
 
-    // バリデーション
     if (!name || name.trim().length === 0)
       throw new Error('コース名を入力してください');
-    if (name.trim().length > MAX_NAME_LEN)
-      throw new Error(`コース名は ${MAX_NAME_LEN} 文字以内にしてください`);
     validateObjects(nodes);
 
     set({ loading: true, error: null });
-    const { data, error } = await supabase
-      .from('courses')
-      .insert({
-        user_id: user.id,
-        name:    name.trim(),
-        nodes:   sanitizeObjects(nodes),
-      })
-      .select('id, name, best_time, play_count, is_public, updated_at')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .insert({
+          user_id: user.id,
+          name:    name.trim(),
+          nodes:   sanitizeObjects(nodes),
+        })
+        .select('id, name, best_time, play_count, is_public, updated_at')
+        .single();
 
-    set({ loading: false });
-    if (error) throw new Error(error.message);
-    set(s => ({ courses: [data, ...s.courses] }));
-    return data;
+      if (error) throw error;
+      set(s => ({ courses: [data, ...s.courses] }));
+      return data;
+    } catch (e) {
+      set({ error: e.message });
+      throw e;
+    } finally {
+      set({ loading: false });
+    }
   },
 
   // ─── コースを上書き保存 ────────────────────────────────────────────

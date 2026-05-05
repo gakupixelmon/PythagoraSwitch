@@ -273,8 +273,69 @@
 }
 
 .btn-auth:hover { opacity: 0.8; }
-.btn-auth.github { background: #333; color: white; }
-.btn-auth.google { background: #fff; color: #444; }
+.btn-auth.github { background: #333; color: white; margin-top: 4px; }
+
+.email-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-auth {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 0.85rem;
+}
+
+.input-auth:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.auth-error-text {
+  color: #f87171;
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  background: rgba(248,113,113,0.1);
+  border-radius: 4px;
+}
+
+.btn-auth.email {
+  background: var(--primary);
+  color: #000;
+  width: 100%;
+}
+
+.btn-text-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 4px;
+}
+
+.btn-text-toggle:hover { color: var(--text-primary); }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.auth-divider::before, .auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
 
 .user-info {
   display: flex;

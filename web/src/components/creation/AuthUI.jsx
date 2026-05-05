@@ -4,11 +4,15 @@ import { useDbStore } from '../../store/dbStore';
 import { useCourseStore } from '../../store/courseStore';
 
 export default function AuthUI() {
-  const { user, profile, loading: authLoading, signInWithGitHub, signInWithGoogle, signOut } = useAuthStore();
+  const { user, profile, loading: authLoading, authError, signInWithGitHub, signInWithEmail, signUpWithEmail, signOut, clearError } = useAuthStore();
   const { courses, fetchCourses, saveCourse, loadCourseNodes, loading: dbLoading, error: dbError } = useDbStore();
   const { objects, setObjects } = useCourseStore();
+  
   const [courseName, setCourseName] = useState('');
   const [showList, setShowList] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isRegister, setIsRegister] = useState(false);
 
   // ユーザー変更時にコース一覧を取得
   useEffect(() => {
@@ -17,13 +21,46 @@ export default function AuthUI() {
 
   if (authLoading) return <div className="auth-panel">読み込み中...</div>;
 
-  // 未ログイン時：ログインボタン表示
+  // 未ログイン時：ログインフォーム表示
   if (!user) {
     return (
       <div className="auth-panel">
-        <div className="auth-title">ログインしてコースを保存</div>
+        <div className="auth-title">{isRegister ? '新規登録' : 'ログイン'}して保存</div>
+        
+        <div className="email-auth-form">
+          <input 
+            type="email" 
+            placeholder="メールアドレス" 
+            value={email} 
+            onChange={e => setEmail(e.target.value)} 
+            className="input-auth"
+          />
+          <input 
+            type="password" 
+            placeholder="パスワード" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            className="input-auth"
+          />
+          
+          {authError && <div className="auth-error-text">{authError}</div>}
+
+          <div className="auth-actions">
+            {isRegister ? (
+              <button className="btn-auth email" onClick={() => signUpWithEmail(email, password)}>登録する</button>
+            ) : (
+              <button className="btn-auth email" onClick={() => signInWithEmail(email, password)}>ログイン</button>
+            )}
+          </div>
+          
+          <button className="btn-text-toggle" onClick={() => { setIsRegister(!isRegister); clearError(); }}>
+            {isRegister ? 'すでにアカウントをお持ちの方' : '新しくアカウントを作る'}
+          </button>
+        </div>
+
+        <div className="auth-divider">または</div>
+
         <button className="btn-auth github" onClick={signInWithGitHub}>GitHub でログイン</button>
-        <button className="btn-auth google" onClick={signInWithGoogle}>Google でログイン</button>
       </div>
     );
   }
@@ -35,7 +72,10 @@ export default function AuthUI() {
       await saveCourse(courseName, objects);
       setCourseName('');
       alert('保存しました！');
+      // 保存後にリストを再取得（確実に同期させる）
+      await fetchCourses();
     } catch (e) {
+      console.error('Save error:', e);
       alert(`保存エラー: ${e.message}`);
     }
   };
