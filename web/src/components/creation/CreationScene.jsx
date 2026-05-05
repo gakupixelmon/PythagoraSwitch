@@ -354,9 +354,15 @@ function IsolatedHoleScene({ object }) {
 
 /** 作成モードの3Dシーン */
 export default function CreationScene() {
+  const { camera } = useThree();
   const { objects, selectedId } = useCourseStore();
   const dragMode = useGameStore(s => s.dragMode);
   const holeMode = useGameStore(s => s.holeMode);
+
+  const setView = (x, y, z) => {
+    camera.position.set(x, y, z);
+    camera.lookAt(0, 0, 0);
+  };
 
   if (holeMode && selectedId) {
     const selectedObj = objects.find(o => o.id === selectedId);
@@ -393,6 +399,8 @@ export default function CreationScene() {
           <EditableObject key={obj.id} object={obj} />
         ))}
       </Physics>
+
+      <ViewCube mainCamera={camera} setView={setView} />
 
       <OrbitControls
         makeDefault

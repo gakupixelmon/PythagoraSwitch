@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react';
-import { RigidBody, useRapier } from '@react-three/rapier';
+import { useRef } from 'react';
+import { RigidBody, useRevoluteJoint } from '@react-three/rapier';
 
 /**
  * シーソーオブジェクト
@@ -8,46 +8,25 @@ import { RigidBody, useRapier } from '@react-three/rapier';
  *   width  : 板の幅 (default 0.65)
  *   height : 支点の高さ (default 1.5)
  */
+function SeesawJoint({ pivotRef, boardRef, baseH }) {
+  useRevoluteJoint(pivotRef, boardRef, [
+    [0, baseH, 0], // pivot上端
+    [0, 0, 0],     // board中心
+    [1, 0, 0]      // X軸周りに回転
+  ]);
+  return null;
+}
+
 export default function SeesawObj({ object, isEditMode }) {
   const { position, rotation, mass, properties } = object;
-  const { length = 6, width = 0.65, pivotHeight = 1.2 } = properties;
+  const { length = 6, width = 0.65, pivotHeight = 1.2 } = properties || {};
 
   const pivotRef  = useRef();
   const boardRef  = useRef();
-  const { world, rapier } = useRapier();
-  const jointRef  = useRef();
 
   const thick = 0.06;
   const baseW = 0.3;
   const baseH = pivotHeight;
-
-  // ヒンジジョイントを接続
-  useEffect(() => {
-    if (isEditMode) return;
-    if (!pivotRef.current || !boardRef.current) return;
-
-    // @react-three/rapier v1.x/v2.x exposes the body via .current directly, or .current.raw() depending on version.
-    // If .raw() exists, we use it, otherwise we assume .current is the body.
-    const pivot = typeof pivotRef.current.raw === 'function' ? pivotRef.current.raw() : pivotRef.current;
-    const board = typeof boardRef.current.raw === 'function' ? boardRef.current.raw() : boardRef.current;
-    if (!pivot || !board) return;
-
-    // 支点（fixed）と板（dynamic）をXローテーション軸ヒンジで繋ぐ
-    const params = rapier.JointData.revolute(
-      { x: 0, y: baseH, z: 0 },   // pivot上端
-      { x: 0, y: 0,  z: 0 },       // board中心
-      { x: 1, y: 0, z: 0 }         // X軸周りに回転
-    );
-    jointRef.current = world.createImpulseJoint(params, pivot, board, true);
-
-    return () => {
-      if (jointRef.current) {
-        // eslint-disable-next-line no-empty
-        try { world.removeImpulseJoint(jointRef.current, true); } catch {}
-        jointRef.current = null;
-      }
-    };
-  }, [isEditMode, world, rapier, baseH]);
 
   const boardY = isEditMode ? pivotHeight : pivotHeight;
 
@@ -91,6 +70,8 @@ export default function SeesawObj({ object, isEditMode }) {
           <meshStandardMaterial color="#78350f" roughness={0.9} />
         </mesh>
       </RigidBody>
+
+      {!isEditMode && <SeesawJoint pivotRef={pivotRef} boardRef={boardRef} baseH={baseH} />}
     </group>
   );
 }
