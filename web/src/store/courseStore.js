@@ -44,7 +44,7 @@ export const TEMPLATES = {
     type: 'straight_rail',
     isStatic: true,
     mass: 1,
-    properties: { length: 4, width: 0.65 }
+    properties: { length: 4, width: 0.65, holes: [] }
   },
   curved_rail_h: {
     name: '水平カーブ',
@@ -53,7 +53,7 @@ export const TEMPLATES = {
     type: 'curved_rail',
     isStatic: true,
     mass: 1,
-    properties: { radius: 2, angle: 90, width: 0.65, bendAxis: 'horizontal', bendDirection: 'left' }
+    properties: { radius: 2, angle: 90, width: 0.65, bendAxis: 'horizontal', bendDirection: 'left', holes: [] }
   },
   curved_rail_v: {
     name: '縦カーブ',
@@ -62,7 +62,7 @@ export const TEMPLATES = {
     type: 'curved_rail',
     isStatic: true,
     mass: 1,
-    properties: { radius: 2, angle: 90, width: 0.65, bendAxis: 'vertical', bendDirection: 'left' }
+    properties: { radius: 2, angle: 90, width: 0.65, bendAxis: 'vertical', bendDirection: 'left', holes: [] }
   },
 
   // ─── ギミック ─────────────────────────────────────────
@@ -73,7 +73,7 @@ export const TEMPLATES = {
     type: 'seesaw',
     isStatic: false,
     mass: 1,
-    properties: { length: 6, width: 0.65, pivotHeight: 1.2 }
+    properties: { length: 6, width: 0.65, pivotHeight: 1.2, holes: [] }
   },
   cup: {
     name: 'コップ',
@@ -82,7 +82,7 @@ export const TEMPLATES = {
     type: 'cup',
     isStatic: true,
     mass: 1,
-    properties: { topRadius: 0.8, bottomRadius: 0.4, height: 1.2, wallThick: 0.06 }
+    properties: { topRadius: 0.8, bottomRadius: 0.4, height: 1.2, wallThick: 0.06, holes: [] }
   },
   funnel: {
     name: 'すり鉢',
@@ -91,7 +91,7 @@ export const TEMPLATES = {
     type: 'funnel',
     isStatic: true,
     mass: 1,
-    properties: { radius: 1.2, depth: 0.6, wallThick: 0.06, holeRadius: 0 }
+    properties: { radius: 1.2, depth: 0.6, wallThick: 0.06, holeRadius: 0, holes: [] }
   },
   hole_plate: {
     name: '穴あきプレート',
@@ -100,7 +100,7 @@ export const TEMPLATES = {
     type: 'hole_plate',
     isStatic: true,
     mass: 1,
-    properties: { width: 2, depth: 2, thickness: 0.15, holeShape: 'circle', holeSize: 0.4, holeOffsetX: 0, holeOffsetZ: 0 }
+    properties: { width: 2, depth: 2, thickness: 0.15, holeShape: 'circle', holeSize: 0.4, holeOffsetX: 0, holeOffsetZ: 0, holes: [] }
   },
 
   // ─── 球体 ─────────────────────────────────────────────
@@ -172,6 +172,29 @@ export const useCourseStore = create((set, get) => ({
 
   updateObject: (id, updates) => set(state => {
     const newObjects = state.objects.map(o => o.id === id ? { ...o, ...updates } : o);
+    const nextHistory = state.history.slice(0, state.historyIndex + 1);
+    nextHistory.push(JSON.parse(JSON.stringify(newObjects)));
+    return { objects: newObjects, history: nextHistory, historyIndex: nextHistory.length - 1 };
+  }),
+
+  // ─── 穴あけ機能 ────────────────────────────────────────
+  addHole: (objectId, hole) => set(state => {
+    const newObjects = state.objects.map(o => {
+      if (o.id !== objectId) return o;
+      const holes = [...(o.properties.holes || []), { ...hole, id: uid() }];
+      return { ...o, properties: { ...o.properties, holes } };
+    });
+    const nextHistory = state.history.slice(0, state.historyIndex + 1);
+    nextHistory.push(JSON.parse(JSON.stringify(newObjects)));
+    return { objects: newObjects, history: nextHistory, historyIndex: nextHistory.length - 1 };
+  }),
+
+  removeHole: (objectId, holeId) => set(state => {
+    const newObjects = state.objects.map(o => {
+      if (o.id !== objectId) return o;
+      const holes = (o.properties.holes || []).filter(h => h.id !== holeId);
+      return { ...o, properties: { ...o.properties, holes } };
+    });
     const nextHistory = state.history.slice(0, state.historyIndex + 1);
     nextHistory.push(JSON.parse(JSON.stringify(newObjects)));
     return { objects: newObjects, history: nextHistory, historyIndex: nextHistory.length - 1 };

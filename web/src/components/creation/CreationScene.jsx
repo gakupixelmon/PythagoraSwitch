@@ -298,15 +298,15 @@ function IsolatedHoleScene({ object }) {
   const downPos = useRef({ x: 0, y: 0 });
 
   const handlePointerDown = (e) => {
-    downPos.current = { x: e.clientX, y: e.clientY };
+    downPos.current = { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };
   };
 
   const handlePointerUp = (e) => {
     e.stopPropagation();
     
     // ドラッグ距離を計算し、視点移動と区別する
-    const dx = e.clientX - downPos.current.x;
-    const dy = e.clientY - downPos.current.y;
+    const dx = e.nativeEvent.clientX - downPos.current.x;
+    const dy = e.nativeEvent.clientY - downPos.current.y;
     if (Math.sqrt(dx * dx + dy * dy) > 5) return; // 5px以上移動した場合はドラッグとみなす
 
     if (!groupRef.current) return;
