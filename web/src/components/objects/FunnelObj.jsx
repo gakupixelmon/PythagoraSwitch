@@ -18,11 +18,16 @@ export default function FunnelObj({ object, isEditMode }) {
   const wallGeo = useMemo(() => {
     const p = [];
     const steps = 20;
+    // 上部の縁から開始
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
       const r = radius * (1 - t) + holeRadius * t;
       const y = -depth * Math.pow(t, 1.5);
       p.push(new THREE.Vector2(r, y));
+    }
+    // 底面を閉じる（holeRadiusが0の場合のみ中央まで埋める）
+    if (holeRadius === 0) {
+      p.push(new THREE.Vector2(0, -depth));
     }
     const baseGeo = new THREE.LatheGeometry(p, 48);
     return applyHoles(baseGeo, holes);
@@ -41,12 +46,6 @@ export default function FunnelObj({ object, isEditMode }) {
             opacity={0.88}
           />
         </mesh>
-        {holeRadius === 0 && (
-          <mesh position={[0, -depth + wallThick / 2, 0]} castShadow>
-            <cylinderGeometry args={[wallThick * 2, wallThick * 2, wallThick, 24]} />
-            <meshStandardMaterial color="#6d28d9" roughness={0.4} />
-          </mesh>
-        )}
       </RigidBody>
 
       {isEditMode && holes.map((h, i) => (

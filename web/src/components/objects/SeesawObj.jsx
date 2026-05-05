@@ -8,11 +8,12 @@ import { RigidBody, useRevoluteJoint } from '@react-three/rapier';
  *   width  : 板の幅 (default 0.65)
  *   height : 支点の高さ (default 1.5)
  */
-function SeesawJoint({ pivotRef, boardRef, baseH }) {
+function SeesawJoint({ pivotRef, boardRef, baseH, thick }) {
+  const hingeY = baseH + 0.04; // シリンダーの中心の高さ
   useRevoluteJoint(pivotRef, boardRef, [
-    [0, baseH, 0], // pivot上端
-    [0, 0, 0],     // board中心
-    [1, 0, 0]      // X軸周りに回転
+    [0, hingeY, 0],    // pivotのローカルアンカー（ヒンジの中心）
+    [0, -thick / 2, 0], // boardのローカルアンカー（板の底面）
+    [1, 0, 0]          // X軸周りに回転
   ]);
   return null;
 }
@@ -28,29 +29,32 @@ export default function SeesawObj({ object, isEditMode }) {
   const baseW = 0.3;
   const baseH = pivotHeight;
 
-  const boardY = isEditMode ? pivotHeight : pivotHeight;
+  // ヒンジの中心高さ
+  const hingeY = baseH + 0.04;
+  // 板の初期Y位置：ヒンジの中心 ＋ 板の厚みの半分
+  const boardY = hingeY + thick / 2;
 
   return (
     <group position={position} rotation={rotation}>
-      {/* 支点（くさび形） */}
+      {/* 支点（ベース台座のみ物理判定あり） */}
       <RigidBody ref={pivotRef} type="fixed">
-        {/* ベース台座 */}
         <mesh position={[0, baseH / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[baseW, baseH, baseW]} />
           <meshStandardMaterial color="#374151" roughness={0.7} />
         </mesh>
-        {/* 頂点 */}
-        <mesh position={[0, baseH + 0.04, 0]} castShadow>
-          <cylinderGeometry args={[0.05, 0.05, 0.08, 12]} />
-          <meshStandardMaterial color="#6b7280" metalness={0.6} />
-        </mesh>
       </RigidBody>
+
+      {/* 頂点のヒンジシリンダー（見た目のみ、衝突判定なし） */}
+      <mesh position={[0, hingeY, 0]} castShadow>
+        <cylinderGeometry args={[0.05, 0.05, 0.08, 12]} />
+        <meshStandardMaterial color="#6b7280" metalness={0.6} />
+      </mesh>
 
       {/* 板（dynamic ＝ 回転する） */}
       <RigidBody
         ref={boardRef}
         type={isEditMode ? 'fixed' : 'dynamic'}
-        position={[0, boardY + thick / 2, 0]}
+        position={[0, boardY, 0]}
         mass={mass}
         linearDamping={0.5}
         angularDamping={2.0}
@@ -71,7 +75,7 @@ export default function SeesawObj({ object, isEditMode }) {
         </mesh>
       </RigidBody>
 
-      {!isEditMode && <SeesawJoint pivotRef={pivotRef} boardRef={boardRef} baseH={baseH} />}
+      {!isEditMode && <SeesawJoint pivotRef={pivotRef} boardRef={boardRef} baseH={baseH} thick={thick} />}
     </group>
   );
 }

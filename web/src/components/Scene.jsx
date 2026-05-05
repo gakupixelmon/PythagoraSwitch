@@ -6,6 +6,7 @@ import * as THREE from 'three';
 
 import CameraRig from './CameraRig';
 import { useCourseStore } from '../store/courseStore';
+import { useGameStore } from '../store/gameStore';
 
 import StraightRailObj from './objects/StraightRailObj';
 import CurvedRailObj from './objects/CurvedRailObj';
@@ -19,6 +20,7 @@ import HolePlateObj from './objects/HolePlateObj';
 
 function PlaySceneInner({ course }) {
   const ballPosRef = useRef(new THREE.Vector3());
+  const gameState = useGameStore(s => s.state);
 
   return (
     <>
@@ -35,7 +37,7 @@ function PlaySceneInner({ course }) {
       <CameraRig ballPosRef={ballPosRef} />
 
       {/* ─── 物理ワールド ─── */}
-      <Physics gravity={[0, -9.81, 0]} timeStep="vary">
+      <Physics gravity={[0, -9.81, 0]} timeStep="vary" paused={gameState === 'ready'}>
         {course.objects.map(obj => {
           if (obj.type === 'straight_rail') return <StraightRailObj key={obj.id} object={obj} isEditMode={false} />;
           if (obj.type === 'curved_rail')  return <CurvedRailObj  key={obj.id} object={obj} isEditMode={false} />;

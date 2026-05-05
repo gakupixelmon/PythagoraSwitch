@@ -1,8 +1,7 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useMemo, useState } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Grid, TransformControls, Hud, OrthographicCamera } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
-import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useCourseStore } from '../../store/courseStore';
 import { useGameStore } from '../../store/gameStore';
@@ -169,36 +168,45 @@ function FloorGrid() {
 function ViewCube({ mainCamera, setView }) {
   const { size } = useThree();
   const cubeRef = useRef();
+  const [hoveredItem, setHoveredItem] = useState(null); // { type: 'face'|'edge'|'corner', index|pos }
 
   const materials = useMemo(() => {
-    const createFace = (text, color) => {
+    const createFace = (text, color, isHovered, rotation = 0) => {
       const canvas = document.createElement('canvas');
-      canvas.width = 128;
-      canvas.height = 128;
+      canvas.width = 128; canvas.height = 128;
       const ctx = canvas.getContext('2d');
-      ctx.fillStyle = color;
+      ctx.fillStyle = isHovered ? '#ffffff' : color;
       ctx.fillRect(0, 0, 128, 128);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = isHovered ? color : '#ffffff';
+      ctx.lineWidth = 12;
       ctx.strokeRect(0, 0, 128, 128);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 48px sans-serif';
+
+      ctx.save();
+      ctx.translate(64, 64);
+      ctx.rotate(rotation);
+      ctx.fillStyle = isHovered ? color : '#ffffff';
+      ctx.font = 'bold 52px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, 64, 64);
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+
       const tex = new THREE.CanvasTexture(canvas);
       tex.colorSpace = THREE.SRGBColorSpace;
       return new THREE.MeshBasicMaterial({ map: tex });
     };
-    return [
-      createFace('右', '#3b82f6'),
-      createFace('左', '#3b82f6'),
-      createFace('上', '#10b981'),
-      createFace('下', '#10b981'),
-      createFace('前', '#ef4444'),
-      createFace('後', '#ef4444'),
+
+    const faceData = [
+      { t: '右', c: '#3b82f6', r: 0 },
+      { t: '左', c: '#3b82f6', r: 0 },
+      { t: '上', c: '#10b981', r: 0 },
+      { t: '下', c: '#10b981', r: Math.PI },
+      { t: '前', c: '#ef4444', r: 0 },
+      { t: '後', c: '#ef4444', r: 0 },
     ];
-  }, []);
+
+    return faceData.map((f, i) => createFace(f.t, f.c, hoveredItem?.type === 'face' && hoveredItem.index === i, f.r));
+  }, [hoveredItem]);
 
   useFrame(() => {
     if (cubeRef.current && mainCamera) {
@@ -208,46 +216,100 @@ function ViewCube({ mainCamera, setView }) {
 
   const handleFaceClick = (e) => {
     e.stopPropagation();
+    if (e.face) {
+      const normal = e.face.normal.clone();
+      normal.applyQuaternion(cubeRef.current.quaternion);
+      if (normal.z < 0.2) return;
+    }
+
     const faceIndex = e.face?.materialIndex;
-    const dist = 6;
+    const d = 10;
     switch (faceIndex) {
-      case 0: setView(dist, 0, 0); break; // right
-      case 1: setView(-dist, 0, 0); break; // left
-      case 2: setView(0, dist, 0); break; // top
-      case 3: setView(0, -dist, 0); break; // bottom
-      case 4: setView(0, 0, dist); break; // front
-      case 5: setView(0, 0, -dist); break; // back
+      case 0: setView( d, 0, 0); break;
+      case 1: setView(-d, 0, 0); break;
+      case 2: setView( 0, d, 0); break;
+      case 3: setView( 0,-d, 0); break;
+      case 4: setView( 0, 0, d); break;
+      case 5: setView( 0, 0,-d); break;
       default: break;
     }
   };
 
+  const handleEdgeClick = (x, y, z) => (e) => {
+    e.stopPropagation();
+    const d = 10;
+    setView(x === 0 ? 0 : Math.sign(x) * d, y === 0 ? 0 : Math.sign(y) * d, z === 0 ? 0 : Math.sign(z) * d);
+  };
+
   const handleCornerClick = (x, y, z) => (e) => {
     e.stopPropagation();
-    const dist = 6;
-    setView(Math.sign(x) * dist, Math.sign(y) * dist, Math.sign(z) * dist);
+    const d = 10;
+    setView(Math.sign(x) * d, Math.sign(y) * d, Math.sign(z) * d);
   };
 
   return (
     <Hud renderPriority={1}>
       <OrthographicCamera makeDefault position={[0, 0, 100]} zoom={1} />
-      <ambientLight intensity={1} />
+      <ambientLight intensity={1.2} />
       <group position={[size.width / 2 - 80, size.height / 2 - 80, 0]}>
         <mesh 
           ref={cubeRef} 
           onClick={handleFaceClick}
-          onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
-          onPointerOut={() => document.body.style.cursor = 'auto'}
+          onPointerMove={(e) => {
+            e.stopPropagation();
+            if (e.face) {
+              const normal = e.face.normal.clone();
+              normal.applyQuaternion(cubeRef.current.quaternion);
+              if (normal.z > 0.2) {
+                setHoveredItem({ type: 'face', index: e.face.materialIndex });
+                document.body.style.cursor = 'pointer';
+              } else {
+                setHoveredItem(null);
+                document.body.style.cursor = 'auto';
+              }
+            }
+          }}
+          onPointerOut={() => { setHoveredItem(null); document.body.style.cursor = 'auto'; }}
           material={materials}
         >
           <boxGeometry args={[60, 60, 60]} />
+          
+          {/* Edges (12) */}
+          {[
+            [30, 30, 0, 10, 10, 40], [30, -30, 0, 10, 10, 40], [-30, 30, 0, 10, 10, 40], [-30, -30, 0, 10, 10, 40], // Z edges
+            [30, 0, 30, 10, 40, 10], [30, 0, -30, 10, 40, 10], [-30, 0, 30, 10, 40, 10], [-30, 0, -30, 10, 40, 10], // Y edges
+            [0, 30, 30, 40, 10, 10], [0, 30, -30, 40, 10, 10], [0, -30, 30, 40, 10, 10], [0, -30, -30, 40, 10, 10], // X edges
+          ].map((pos, i) => {
+            const isH = hoveredItem?.type === 'edge' && hoveredItem.index === i;
+            return (
+              <mesh key={`e${i}`} position={[pos[0], pos[1], pos[2]]} 
+                onClick={handleEdgeClick(pos[0], pos[1], pos[2])}
+                onPointerOver={(e) => { e.stopPropagation(); setHoveredItem({ type: 'edge', index: i }); document.body.style.cursor = 'pointer'; }}
+                onPointerOut={() => { setHoveredItem(null); document.body.style.cursor = 'auto'; }}
+              >
+                <boxGeometry args={[pos[3], pos[4], pos[5]]} />
+                <meshBasicMaterial color={isH ? "#fcd34d" : "#4b5563"} />
+              </mesh>
+            );
+          })}
+
+          {/* Corners (8) */}
           {[-30, 30].map(x => 
             [-30, 30].map(y => 
-              [-30, 30].map(z => (
-                <mesh key={`${x}${y}${z}`} position={[x, y, z]} onClick={handleCornerClick(x, y, z)}>
-                  <sphereGeometry args={[10, 16, 16]} />
-                  <meshBasicMaterial color="#fcd34d" />
-                </mesh>
-              ))
+              [-30, 30].map(z => {
+                const key = `${x}${y}${z}`;
+                const isH = hoveredItem?.type === 'corner' && hoveredItem.index === key;
+                return (
+                  <mesh key={key} position={[x, y, z]} 
+                    onClick={handleCornerClick(x, y, z)}
+                    onPointerOver={(e) => { e.stopPropagation(); setHoveredItem({ type: 'corner', index: key }); document.body.style.cursor = 'pointer'; }}
+                    onPointerOut={() => { setHoveredItem(null); document.body.style.cursor = 'auto'; }}
+                  >
+                    <sphereGeometry args={[12, 16, 16]} />
+                    <meshBasicMaterial color={isH ? "#f59e0b" : "#fcd34d"} />
+                  </mesh>
+                );
+              })
             )
           )}
         </mesh>
@@ -265,9 +327,31 @@ function IsolatedHoleScene({ object }) {
   const groupRef = useRef();
   const downPos = useRef({ x: 0, y: 0 });
 
-  const setView = (x, y, z) => {
-    camera.position.set(x, y, z);
-    camera.lookAt(0, 0, 0);
+  const controlsRef = useRef();
+  const setView = (nx, ny, nz) => {
+    if (!controlsRef.current) return;
+    const target = controlsRef.current.target;
+    const d = camera.position.distanceTo(target);
+
+    // 新しい視線方向 (nx, ny, nz はカメラから見たターゲットへの方向の逆、つまりターゲットからカメラへのベクトル)
+    const v_new = new THREE.Vector3(nx, ny, nz).normalize().multiplyScalar(-1);
+    const v_old = new THREE.Vector3().subVectors(target, camera.position).normalize();
+    const u_old = camera.up.clone();
+
+    let u_new;
+    const dot = v_new.dot(u_old);
+    if (Math.abs(dot) < 0.95) {
+      // 現在のUpベクトルが新しい視線と平行でないなら、それを維持して直交化
+      u_new = u_old.clone().sub(v_new.clone().multiplyScalar(dot)).normalize();
+    } else {
+      // 平行（真上・真下への移動）なら、これまでの視線方向を新しいUp（またはDown）に転用
+      u_new = v_old.clone().multiplyScalar(-Math.sign(dot)).normalize();
+    }
+
+    camera.position.set(target.x - nx, target.y - ny, target.z - nz).setLength(d).add(target);
+    camera.up.copy(u_new);
+    camera.lookAt(target);
+    controlsRef.current.update();
   };
 
   let Content = null;
@@ -338,6 +422,7 @@ function IsolatedHoleScene({ object }) {
       <ViewCube mainCamera={camera} setView={setView} />
 
       <OrbitControls
+        ref={controlsRef}
         makeDefault
         enableDamping
         dampingFactor={0.08}
@@ -359,9 +444,28 @@ export default function CreationScene() {
   const dragMode = useGameStore(s => s.dragMode);
   const holeMode = useGameStore(s => s.holeMode);
 
-  const setView = (x, y, z) => {
-    camera.position.set(x, y, z);
-    camera.lookAt(0, 0, 0);
+  const controlsRef = useRef();
+  const setView = (nx, ny, nz) => {
+    if (!controlsRef.current) return;
+    const target = controlsRef.current.target;
+    const d = camera.position.distanceTo(target);
+
+    const v_new = new THREE.Vector3(nx, ny, nz).normalize().multiplyScalar(-1);
+    const v_old = new THREE.Vector3().subVectors(target, camera.position).normalize();
+    const u_old = camera.up.clone();
+
+    let u_new;
+    const dot = v_new.dot(u_old);
+    if (Math.abs(dot) < 0.95) {
+      u_new = u_old.clone().sub(v_new.clone().multiplyScalar(dot)).normalize();
+    } else {
+      u_new = v_old.clone().multiplyScalar(-Math.sign(dot)).normalize();
+    }
+
+    camera.position.set(target.x - nx, target.y - ny, target.z - nz).setLength(d).add(target);
+    camera.up.copy(u_new);
+    camera.lookAt(target);
+    controlsRef.current.update();
   };
 
   if (holeMode && selectedId) {
@@ -403,11 +507,11 @@ export default function CreationScene() {
       <ViewCube mainCamera={camera} setView={setView} />
 
       <OrbitControls
+        ref={controlsRef}
         makeDefault
         enableDamping
         dampingFactor={0.08}
         target={[0, 1, 5]}
-        maxPolarAngle={Math.PI * 0.85}
         mouseButtons={{
           LEFT:   dragMode === 'rotate' ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
           MIDDLE: THREE.MOUSE.DOLLY,
