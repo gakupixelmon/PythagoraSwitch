@@ -23,18 +23,30 @@ export default function StraightRailObj({ object, isEditMode }) {
     <group position={position} rotation={rotation}>
       <RigidBody type={rbType} mass={mass} friction={0.5} restitution={0.1} colliders="trimesh">
         {/* 床板（穴あき） */}
-        <mesh receiveShadow castShadow position={[0, thick / 2, 0]} geometry={floorGeo}>
-          <meshStandardMaterial color="#92400e" roughness={0.85} metalness={0.05} side={THREE.DoubleSide} />
+        <mesh receiveShadow castShadow position={[0, 0, 0]} geometry={floorGeo}>
+          <meshStandardMaterial color={properties.color || "#92400e"} roughness={0.85} metalness={0.05} side={THREE.DoubleSide} />
         </mesh>
-        {/* 左壁 */}
-        <mesh receiveShadow castShadow position={[halfW - wallT / 2, thick + wallH / 2, 0]}>
+        
+        {/* 左壁 (上) */}
+        <mesh receiveShadow castShadow position={[halfW - wallT / 2, thick / 2 + wallH / 2, 0]}>
           <boxGeometry args={[wallT, wallH, length]} />
-          <meshStandardMaterial color="#78350f" roughness={0.9} />
+          <meshStandardMaterial color={properties.color || "#78350f"} roughness={0.9} />
         </mesh>
-        {/* 右壁 */}
-        <mesh receiveShadow castShadow position={[-halfW + wallT / 2, thick + wallH / 2, 0]}>
+        {/* 左壁 (下) */}
+        <mesh receiveShadow castShadow position={[halfW - wallT / 2, -(thick / 2 + wallH / 2), 0]}>
           <boxGeometry args={[wallT, wallH, length]} />
-          <meshStandardMaterial color="#78350f" roughness={0.9} />
+          <meshStandardMaterial color={properties.color || "#78350f"} roughness={0.9} />
+        </mesh>
+
+        {/* 右壁 (上) */}
+        <mesh receiveShadow castShadow position={[-halfW + wallT / 2, thick / 2 + wallH / 2, 0]}>
+          <boxGeometry args={[wallT, wallH, length]} />
+          <meshStandardMaterial color={properties.color || "#78350f"} roughness={0.9} />
+        </mesh>
+        {/* 右壁 (下) */}
+        <mesh receiveShadow castShadow position={[-halfW + wallT / 2, -(thick / 2 + wallH / 2), 0]}>
+          <boxGeometry args={[wallT, wallH, length]} />
+          <meshStandardMaterial color={properties.color || "#78350f"} roughness={0.9} />
         </mesh>
       </RigidBody>
 

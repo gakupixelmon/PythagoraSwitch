@@ -44,7 +44,7 @@ export const TEMPLATES = {
     type: 'straight_rail',
     isStatic: true,
     mass: 1,
-    properties: { length: 4, width: 0.65, holes: [] }
+    properties: { length: 4, width: 0.65, color: '#92400e', holes: [] }
   },
   curved_rail_h: {
     name: '水平カーブ',
@@ -53,7 +53,7 @@ export const TEMPLATES = {
     type: 'curved_rail',
     isStatic: true,
     mass: 1,
-    properties: { radius: 2, angle: 90, width: 0.65, bendAxis: 'horizontal', bendDirection: 'left', holes: [] }
+    properties: { radius: 3, angle: 90, width: 0.7, bendAxis: 'horizontal', bendDirection: 'left', color: '#3b82f6', holes: [] }
   },
   curved_rail_v: {
     name: '縦カーブ',
@@ -62,7 +62,7 @@ export const TEMPLATES = {
     type: 'curved_rail',
     isStatic: true,
     mass: 1,
-    properties: { radius: 2, angle: 90, width: 0.65, bendAxis: 'vertical', bendDirection: 'left', holes: [] }
+    properties: { radius: 2, angle: 90, width: 0.65, bendAxis: 'vertical', bendDirection: 'left', color: '#92400e', holes: [] }
   },
 
   // ─── ギミック ─────────────────────────────────────────
