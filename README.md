@@ -6,5 +6,9 @@
 
 概要
 ----
-Pythagora Switchのシミュレーションを実現するプロジェクトです。  
+Pythagora Switchのシミュレーションを実現するプロジェクトです。 
 
+現在はvarcelでデプロイしてありますが、AWSへのデプロイも考えています。
+
+以下のリンクで遊べます。
+https://pythagora-switch.vercel.app/
