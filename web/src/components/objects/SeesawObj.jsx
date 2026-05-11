@@ -1,12 +1,15 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { RigidBody, useRevoluteJoint } from '@react-three/rapier';
+import * as THREE from 'three';
+import { applyHoles } from '../../utils/applyHoles';
 
 /**
  * シーソーオブジェクト
  * properties:
- *   length : 板の長さ (default 6)
- *   width  : 板の幅 (default 0.65)
- *   height : 支点の高さ (default 1.5)
+ *   length      : 板の長さ (default 6)
+ *   width       : 板の幅 (default 0.65)
+ *   pivotHeight : 支点の高さ (default 1.2)
+ *   holes       : 穴の配列 (default [])
  */
 function SeesawJoint({ pivotRef, boardRef, baseH, thick }) {
   const hingeY = baseH + 0.04; // シリンダーの中心の高さ
@@ -20,7 +23,7 @@ function SeesawJoint({ pivotRef, boardRef, baseH, thick }) {
 
 export default function SeesawObj({ object, isEditMode }) {
   const { position, rotation, mass, properties } = object;
-  const { length = 6, width = 0.65, pivotHeight = 1.2 } = properties || {};
+  const { length = 6, width = 0.65, pivotHeight = 1.2, holes = [] } = properties || {};
 
   const pivotRef  = useRef();
   const boardRef  = useRef();
@@ -33,6 +36,12 @@ export default function SeesawObj({ object, isEditMode }) {
   const hingeY = baseH + 0.04;
   // 板の初期Y位置：ヒンジの中心 ＋ 板の厚みの半分
   const boardY = hingeY + thick / 2;
+
+  // 穴あきボードジオメトリ
+  const boardGeo = useMemo(() => {
+    const base = new THREE.BoxGeometry(width, thick, length);
+    return applyHoles(base, holes);
+  }, [width, thick, length, holes]);
 
   return (
     <group position={position} rotation={rotation}>
@@ -59,9 +68,8 @@ export default function SeesawObj({ object, isEditMode }) {
         linearDamping={0.5}
         angularDamping={2.0}
       >
-        <mesh castShadow receiveShadow>
-          <boxGeometry args={[width, thick, length]} />
-          <meshStandardMaterial color="#92400e" roughness={0.8} />
+        <mesh castShadow receiveShadow geometry={boardGeo}>
+          <meshStandardMaterial color="#92400e" roughness={0.8} side={THREE.DoubleSide} />
         </mesh>
         {/* 左壁 */}
         <mesh position={[ width/2 - 0.03, thick/2 + 0.09, 0]} castShadow>
@@ -73,6 +81,17 @@ export default function SeesawObj({ object, isEditMode }) {
           <boxGeometry args={[0.04, 0.18, length]} />
           <meshStandardMaterial color="#78350f" roughness={0.9} />
         </mesh>
+
+        {/* 編集モード: 穴の位置をワイヤーフレームで可視化 */}
+        {isEditMode && holes.map((h, i) => (
+          <mesh key={i} position={[h.localX, h.localY, h.localZ]}>
+            {h.shape === 'square'
+              ? <boxGeometry args={[h.radius * 2, thick + 0.02, h.radius * 2]} />
+              : <cylinderGeometry args={[h.radius, h.radius, thick + 0.02, 20]} />
+            }
+            <meshStandardMaterial color="#ef4444" wireframe />
+          </mesh>
+        ))}
       </RigidBody>
 
       {!isEditMode && <SeesawJoint pivotRef={pivotRef} boardRef={boardRef} baseH={baseH} thick={thick} />}

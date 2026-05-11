@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { RigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
+import { applyHoles } from '../../utils/applyHoles';
 
 /**
  * カーブレール
@@ -10,6 +11,7 @@ import * as THREE from 'three';
  *   width       : レール幅 (default 0.65)
  *   bendAxis    : 'horizontal' | 'vertical'  (曲がる平面)
  *   bendDirection: 'left' | 'right'          (曲がる向き)
+ *   holes       : 穴の配列 (default [])
  */
 export default function CurvedRailObj({ object, isEditMode }) {
   const { position, rotation, isStatic, mass, properties } = object;
@@ -19,6 +21,7 @@ export default function CurvedRailObj({ object, isEditMode }) {
     width        = 0.65,
     bendAxis      = 'horizontal',
     bendDirection = 'left',
+    holes        = [],
   } = properties;
 
   const thick = 0.08;
@@ -92,16 +95,28 @@ export default function CurvedRailObj({ object, isEditMode }) {
       extrudePath: curve,
       bevelEnabled: false,
     };
-    return new THREE.ExtrudeGeometry(hShape, extrudeSettings);
-  }, [radius, angle, width, bendAxis, bendDirection]);
+    const extruded = new THREE.ExtrudeGeometry(hShape, extrudeSettings);
+    return applyHoles(extruded, holes);
+  }, [radius, angle, width, bendAxis, bendDirection, holes]);
 
   return (
     <group position={position} rotation={rotation}>
       <RigidBody type={rbType} mass={mass} friction={0.5} restitution={0.1} colliders="trimesh">
         <mesh geometry={geometry} receiveShadow castShadow>
-          <meshStandardMaterial color={properties.color || "#92400e"} roughness={0.85} metalness={0.05} />
+          <meshStandardMaterial color={properties.color || "#92400e"} roughness={0.85} metalness={0.05} side={THREE.DoubleSide} />
         </mesh>
       </RigidBody>
+
+      {/* 編集モード: 穴の位置をワイヤーフレームで可視化 */}
+      {isEditMode && holes.map((h, i) => (
+        <mesh key={i} position={[h.localX, h.localY, h.localZ]}>
+          {h.shape === 'square'
+            ? <boxGeometry args={[h.radius * 2, 0.1, h.radius * 2]} />
+            : <cylinderGeometry args={[h.radius, h.radius, 0.1, 20]} />
+          }
+          <meshStandardMaterial color="#ef4444" wireframe />
+        </mesh>
+      ))}
     </group>
   );
 }
