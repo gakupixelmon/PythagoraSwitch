@@ -71,6 +71,10 @@ function TypeSpecificProps({ obj, onPropChange }) {
               onChange={e => set('radius', +e.target.value || 0.5)} />
           </label>
           <label style={labelStyle}>
+            幅<input style={inputStyle} type="number" step="0.05" value={p.width ?? 0.65}
+              onChange={e => set('width', +e.target.value || 0.1)} />
+          </label>
+          <label style={labelStyle}>
             角度(°)<input style={inputStyle} type="number" step="5" value={p.angle ?? 90}
               onChange={e => set('angle', Math.min(360, Math.max(5, +e.target.value)))} />
           </label>
@@ -181,6 +185,14 @@ function TypeSpecificProps({ obj, onPropChange }) {
             </label>
           </div>
         </>
+      );
+
+    case 'main_ball':
+      return (
+        <label style={labelStyle}>
+          半径<input style={inputStyle} type="number" step="0.05" value={p.radius ?? 0.12}
+            onChange={e => set('radius', +e.target.value || 0.05)} />
+        </label>
       );
 
     case 'sphere':
