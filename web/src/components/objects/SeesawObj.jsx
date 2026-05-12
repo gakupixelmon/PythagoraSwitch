@@ -82,16 +82,7 @@ export default function SeesawObj({ object, isEditMode }) {
           <meshStandardMaterial color="#78350f" roughness={0.9} />
         </mesh>
 
-        {/* 編集モード: 穴の位置をワイヤーフレームで可視化 */}
-        {isEditMode && holes.map((h, i) => (
-          <mesh key={i} position={[h.localX, h.localY, h.localZ]}>
-            {h.shape === 'square'
-              ? <boxGeometry args={[h.radius * 2, thick + 0.02, h.radius * 2]} />
-              : <cylinderGeometry args={[h.radius, h.radius, thick + 0.02, 20]} />
-            }
-            <meshStandardMaterial color="#ef4444" wireframe />
-          </mesh>
-        ))}
+
       </RigidBody>
 
       {!isEditMode && <SeesawJoint pivotRef={pivotRef} boardRef={boardRef} baseH={baseH} thick={thick} />}
