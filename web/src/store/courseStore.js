@@ -127,10 +127,6 @@ export const useCourseStore = create((set, get) => ({
   selectedId: null,
   history: [JSON.parse(JSON.stringify(DEFAULT_OBJECTS))],
   historyIndex: 0,
-  currentCourseId: null,
-  currentCourseName: '',
-
-  setCurrentCourse: (id, name) => set({ currentCourseId: id, currentCourseName: name }),
 
   // ─── 履歴 ───────────────────────────────────────────
   undo: () => set(state => {
@@ -222,16 +218,14 @@ export const useCourseStore = create((set, get) => ({
     const newObjects = JSON.parse(JSON.stringify(DEFAULT_OBJECTS));
     const nextHistory = state.history.slice(0, state.historyIndex + 1);
     nextHistory.push(JSON.parse(JSON.stringify(newObjects)));
-    return { objects: newObjects, selectedId: null, history: nextHistory, historyIndex: nextHistory.length - 1, currentCourseId: null, currentCourseName: '' };
+    return { objects: newObjects, selectedId: null, history: nextHistory, historyIndex: nextHistory.length - 1 };
   }),
 
-  setObjects: (objects, courseId = null, courseName = '') => set({
+  setObjects: (objects) => set({
     objects: JSON.parse(JSON.stringify(objects)),
     history: [JSON.parse(JSON.stringify(objects))],
     historyIndex: 0,
-    selectedId: null,
-    currentCourseId: courseId,
-    currentCourseName: courseName
+    selectedId: null
   }),
 
   getCourse: () => {
