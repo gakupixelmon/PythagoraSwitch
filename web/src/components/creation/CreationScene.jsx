@@ -440,9 +440,74 @@ function IsolatedHoleScene({ object }) {
 /** 作成モードの3Dシーン */
 export default function CreationScene() {
   const { camera } = useThree();
-  const { objects, selectedId } = useCourseStore();
+  const { objects, selectedId, updateObject } = useCourseStore();
   const dragMode = useGameStore(s => s.dragMode);
   const holeMode = useGameStore(s => s.holeMode);
+
+  // ─── キーボードによるサイズ変更 ───
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!selectedId || holeMode) return;
+      
+      // 入力フィールド内では無効化
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+      const isPlus = e.key === ']' || e.key === '+' || e.key === '=';
+      const isMinus = e.key === '[' || e.key === '-';
+      
+      if (!isPlus && !isMinus) return;
+
+      const obj = objects.find(o => o.id === selectedId);
+      if (!obj) return;
+
+      const stepMult = e.shiftKey ? 2 : 1;
+      const delta = isPlus ? 0.1 * stepMult : -0.1 * stepMult;
+      
+      const p = { ...obj.properties };
+      let changed = false;
+
+      const update = (key, d, min = 0.05) => {
+        const oldVal = p[key] ?? (key === 'radius' ? 0.2 : 1);
+        p[key] = Math.max(min, Math.round((oldVal + d) * 100) / 100);
+        changed = true;
+      };
+
+      switch (obj.type) {
+        case 'straight_rail':
+        case 'seesaw':
+          update('length', delta * 5, 1); // 0.5 step
+          break;
+        case 'curved_rail':
+          update('radius', delta * 5, 0.5); // 0.5 step
+          break;
+        case 'sphere':
+        case 'main_ball':
+          update('radius', delta * 0.5, 0.05); // 0.05 step
+          break;
+        case 'cup':
+          update('height', delta, 0.1);
+          update('topRadius', delta, 0.1);
+          update('bottomRadius', delta * 0.5, 0.05);
+          break;
+        case 'funnel':
+          update('radius', delta, 0.1);
+          update('depth', delta * 0.5, 0.05);
+          break;
+        case 'hole_plate':
+          update('width', delta * 2.5, 0.1);
+          update('depth', delta * 2.5, 0.1);
+          break;
+      }
+
+      if (changed) {
+        e.preventDefault();
+        updateObject(selectedId, { properties: p });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedId, objects, updateObject, holeMode]);
 
   const controlsRef = useRef();
   const setView = (nx, ny, nz) => {

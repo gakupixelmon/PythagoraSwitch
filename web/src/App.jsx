@@ -157,6 +157,8 @@ function CameraHint() {
       <span style={{ marginLeft: '4px', color: '#4b5563' }}>|</span>
       <span>スクロール: ズーム</span>
       <span style={{ color: '#4b5563' }}>|</span>
+      <span>[ / ] : サイズ変更</span>
+      <span style={{ color: '#4b5563' }}>|</span>
       <span>物体にカーソルを合わせると移動/回転を選択できます</span>
     </div>
   );
